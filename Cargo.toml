@@ -1,12 +1,12 @@
 [package]
 name = "listpack"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Clay Molocznik <clay@mojo.run>"]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/run-mojo/rax"
-homepage = "https://github.com/run-mojo/rax"
-documentation = "https://docs.rs/rax"
+repository = "https://github.com/run-mojo/listpack"
+homepage = "https://github.com/run-mojo/listpack"
+documentation = "https://docs.rs/listpack"
 description = """
 Rust wrapper for the "listpack" data structure created and maintained for Redis
 """
