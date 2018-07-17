@@ -38,7 +38,9 @@
 
 #ifndef LISTPACK_ALLOC_H
 #define LISTPACK_ALLOC_H
-#define lp_malloc malloc
-#define lp_realloc realloc
-#define lp_free free
+
+extern void* (*lp_malloc)(size_t);
+extern void* (*lp_realloc)(void*,size_t);
+extern void (*lp_free)(void*);
+
 #endif

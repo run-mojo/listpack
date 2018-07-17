@@ -10,6 +10,7 @@ fn main() {
     // tricks that we need to complete the build.
     gcc::Build::new()
         .file("c/listpack.c")
+        .file("c/listpack_ext.c")
         .include("c/")
         .compile("liblistpack.a");
 

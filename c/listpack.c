@@ -477,7 +477,7 @@ uint32_t lpLength(unsigned char *lp) {
  * by the function, than to pass a buffer (and convert it back to a number)
  * is of course useless.
  *
- * If the function is called against a badly encoded ziplist, so that there
+ * If the function is called against a badly encoded listpack, so that there
  * is no valid way to parse it, the function returns like if there was an
  * integer encoded with value 12345678900000000 + <unrecognized byte>, this may
  * be an hint to understand that something is wrong. To crash in this case is
@@ -568,7 +568,7 @@ unsigned char *lpGet(unsigned char *p, int64_t *count, unsigned char *intbuf) {
     }
 }
 
-/* Insert, delete or replace the specified element 'ele' of lenght 'len' at
+/* Insert, delete or replace the specified element 'ele' of length 'len' at
  * the specified position 'p', with 'p' being a listpack element pointer
  * obtained with lpFirst(), lpLast(), lpIndex(), lpNext(), lpPrev() or
  * lpSeek().
@@ -710,7 +710,7 @@ unsigned char *lpInsert(unsigned char *lp, unsigned char *ele, uint32_t size, un
     return lp;
 }
 
-/* Append the specified element 'ele' of lenght 'len' at the end of the
+/* Append the specified element 'ele' of length 'len' at the end of the
  * listpack. It is implemented in terms of lpInsert(), so the return value is
  * the same as lpInsert(). */
 unsigned char *lpAppend(unsigned char *lp, unsigned char *ele, uint32_t size) {
