@@ -1,3 +1,117 @@
+# listpack
+
+Very memory efficient packed list data structure. Originally created and used in Redis. Specification below usage example. To really understand the full benefits read the specification. This is a damn handy data structure :). For another beautiful gem of Redis engineering look at the Radix Tree "Rax" wrapper project.
+
+[Radix Tree "Rax" used in Redis brought to Rust](https://github.com/run-mojo/rax)
+
+## Usage
+
+```rust
+extern crate libc;
+extern crate listpack;
+
+use libc;
+use listpack;
+use listpack::{Listpack, Value};
+
+fn main() {
+    // Optional use different memory allocator
+    // Internally defaults to malloc in libc.
+    patch_allocator();
+    
+    let mut lp = Listpack::new();
+    // Append any number type
+    lp.append_int(100);
+    // Append strings or byte slices
+    lp.append_str("hello");
+    
+    // Append the special Value type which supports either...
+    lp.append(Value::Int(1)); // Int
+    // lp.append(Value::Str(ptr, len)); // Str - Raw Pointer
+    
+    {
+        // Seek element by index.
+        let index = 1;
+        let element = lp.seek(index);
+        let value = lp.get(element);
+        let value_int = lp.get_int(element);
+        let value_str = lp.get_str(element);
+        
+        // Replace values
+        lp.replace(element, Value::Int(2));
+        // Delete element
+        lp.delete(element);
+    }    
+
+    println!("Iterate forward...");
+    let mut ele = lp.start();
+    while let Some(v) = lp.first_or_next(ele) {
+        ele = v;
+        let val = lp.get(ele);
+        match val {
+            Value::Int(v) => {
+                println!("Int Value     -> {}", v);
+            }
+            Value::Str(_v, _len) => {
+                println!("String Value  -> {}", val.as_str());
+            }
+        }
+    }
+
+    println!();
+    println!("Iterate backward...");
+    let mut ele = lp.start();
+    while let Some(v) = lp.last_or_prev(ele) {
+        ele = v;
+        let val = lp.get(ele);
+        match val {
+            Value::Int(v) => {
+                println!("Int Value     -> {}", v);
+            }
+            Value::Str(_v, _len) => {
+                println!("String Value  -> {}", val.as_str());
+            }
+        }
+    }
+}
+
+fn patch_allocator() {
+    // Can hook memory allocator to control the internal heap allocations.
+    // All memory is reclaimed when listpack leaves scope automatically
+    // through the Drop trait.
+    unsafe {
+        listpack::set_allocator(
+            lp_malloc_hook,
+            lp_realloc_hook,
+            lp_free_hook,
+        );
+    }
+}
+
+extern "C" fn lp_malloc_hook(size: libc::size_t) -> *mut u8 {
+    unsafe {
+        println!("malloc");
+        libc::malloc(size) as *mut u8
+    }
+}
+
+extern "C" fn lp_realloc_hook(ptr: *mut libc::c_void, size: libc::size_t) -> *mut u8 {
+    unsafe {
+        println!("realloc");
+        libc::realloc(ptr, size) as *mut u8
+    }
+}
+
+extern "C" fn lp_free_hook(ptr: *mut libc::c_void) {
+    unsafe {
+        println!("free");
+        libc::free(ptr)
+    }
+}
+
+```
+
+
 Listpack specification
 ===
 
