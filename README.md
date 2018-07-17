@@ -1,6 +1,6 @@
 # listpack
 
-Very memory efficient packed list data structure. Originally created and used in Redis. Specification below usage example. To really understand the full benefits read the specification. This is a damn handy data structure :). For another beautiful gem of Redis engineering look at the Radix Tree "Rax" wrapper project.
+Very memory efficient packed list data structure. Originally created and used in Redis and is in production in Redis Streams. Specification and data format is explained below usage example. For another gem of Redis engineering look at the Radix Tree "Rax" wrapper project.
 
 [Radix Tree "Rax" used in Redis brought to Rust](https://github.com/run-mojo/rax)
 

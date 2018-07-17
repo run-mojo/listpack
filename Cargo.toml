@@ -1,6 +1,6 @@
 [package]
 name = "listpack"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["Clay Molocznik <clay@mojo.run>"]
 license = "MIT"
 readme = "README.md"
@@ -15,6 +15,10 @@ build = "build.rs"
 [lib]
 bench = false
 crate-type = ["dylib", "rlib"]
+
+[[bench]]
+name = "listpack"
+path = "benches/bench.rs"
 
 [dependencies]
 libc = "0.2"

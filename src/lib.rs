@@ -1,9 +1,11 @@
+#![allow(dead_code)]
+
 extern crate libc;
 
 use std::mem::size_of;
 
-//const LP_HDR_SIZE: i32 = 6;
-//const LP_INTBUF_SIZE: usize = 21;
+pub const HDR_SIZE: i32 = 6;
+const INTBUF_SIZE: usize = 21;
 
 pub const BEFORE: libc::c_int = 0;
 pub const AFTER: libc::c_int = 1;
@@ -65,88 +67,88 @@ impl Value {
     }
 }
 
-pub trait Num: Clone + Default + std::fmt::Debug {
+pub trait Int: Clone + Default + std::fmt::Debug {
     fn to_int64(self) -> i64;
 }
 
-impl Num for isize {
+impl Int for isize {
     #[inline]
     fn to_int64(self) -> i64 {
         self as i64
     }
 }
 
-impl Num for usize {
+impl Int for usize {
     #[inline]
     fn to_int64(self) -> i64 {
         self as i64
     }
 }
 
-impl Num for f32 {
+impl Int for f32 {
     #[inline]
     fn to_int64(self) -> i64 {
         self.to_bits() as i64
     }
 }
 
-impl Num for f64 {
+impl Int for f64 {
     #[inline]
     fn to_int64(self) -> i64 {
         self.to_bits() as i64
     }
 }
 
-impl Num for i8 {
+impl Int for i8 {
     #[inline]
     fn to_int64(self) -> i64 {
         self as i64
     }
 }
 
-impl Num for u8 {
+impl Int for u8 {
     #[inline]
     fn to_int64(self) -> i64 {
         self as i64
     }
 }
 
-impl Num for i16 {
+impl Int for i16 {
     #[inline]
     fn to_int64(self) -> i64 {
         self as i64
     }
 }
 
-impl Num for u16 {
+impl Int for u16 {
     #[inline]
     fn to_int64(self) -> i64 {
         self as i64
     }
 }
 
-impl Num for i32 {
+impl Int for i32 {
     #[inline]
     fn to_int64(self) -> i64 {
         self as i64
     }
 }
 
-impl Num for u32 {
+impl Int for u32 {
     #[inline]
     fn to_int64(self) -> i64 {
         self as i64
     }
 }
 
-impl Num for i64 {
+impl Int for i64 {
     #[inline]
     fn to_int64(self) -> i64 {
         self
     }
 }
 
-impl Num for u64 {
+impl Int for u64 {
     #[inline]
     fn to_int64(self) -> i64 {
         self as i64
@@ -555,7 +557,7 @@ impl<'a> Str for &'a str {
 }
 
 
-/// Provides a minimal wrapper to Listpack.
+///
 impl Listpack {
     pub fn new() -> Listpack {
         return Listpack { lp: unsafe { lpNew() } };
@@ -704,7 +706,7 @@ impl Listpack {
                 let result = unsafe {
                     lpAppend(
                         self.lp,
-                        ptr, len as u32
+                        ptr, len as u32,
                     )
                 };
 
@@ -766,7 +768,7 @@ impl Listpack {
         p: Element,
         action: libc::c_int,
     ) -> Option<Element>
-        where V: Num {
+        where V: Int {
         unsafe {
             let i = value.to_int64();
             let newp: &mut *mut u8 = &mut std::ptr::null_mut();
@@ -793,7 +795,7 @@ impl Listpack {
     /// Append the specified element 'ele' of length 'len' at the end of the
     /// listpack. It is implemented in terms of insert(), so the return value is
     /// the same as insert().
-    pub fn append_int<V>(&mut self, value: V) where V: Num {
+    pub fn append_int<V>(&mut self, value: V) where V: Int {
         unsafe {
             let i = value.to_int64();
             let result = lpAppendInt64(self.lp, i);
@@ -803,7 +805,7 @@ impl Listpack {
         }
     }
 
-    pub fn replace_int<V>(&mut self, value: V, pos: Element) where V: Num {
+    pub fn replace_int<V>(&mut self, value: V, pos: Element) where V: Int {
         unsafe {
             let i = value.to_int64();
             let result = lpReplaceInt64(self.lp, pos as *mut *mut _ as *mut *mut u8, i);
@@ -1004,6 +1006,20 @@ impl Listpack {
             }
         }
     }
+
+    pub unsafe fn unsafe_set_bytes(&mut self, len: u32) {
+        let p = self.lp as *mut u8;
+        *p.offset(1) = (len & 0xff) as u8;
+        *p.offset(2) = ((len >> 8) & 0xff) as u8;
+        *p.offset(3) = ((len >> 16) & 0xff) as u8;
+        *p.offset(4) = ((len >> 24) & 0xff) as u8;
+    }
+
+    pub unsafe fn unsafe_set_len(&mut self, len: u16) {
+        let p = self.lp as *mut u8;
+        *p.offset(5) = (len & 0xff) as u8;
+        *p.offset(6) = ((len >> 8) & 0xff) as u8;
+    }
 }
 
 // Map Drop -> "lpFree"
@@ -1125,12 +1141,13 @@ mod tests {
     fn it_works() {
         let mut lp = Listpack::new();
 
-        for i in 0..25 {
+        for i in 0..24 {
             lp.append_int(i as u8);
         }
 
-        lp.append(Value::Int(0));
+        lp.append(Value::Int(25));
         lp.append_str("hello");
+        lp.append_str("bye");
 
         println!("Iterate forward...");
         let mut ele = lp.start();
@@ -1139,10 +1156,10 @@ mod tests {
             let val = lp.get(ele);
             match val {
                 Value::Int(v) => {
-                    println!("Int Value     -> {}", v);
+                    println!("Int     -> {}", v);
                 }
                 Value::Str(_v, _len) => {
-                    println!("String Value  -> {}", val.as_str());
+                    println!("String  -> {}", val.as_str());
                 }
             }
         }
@@ -1155,16 +1172,58 @@ mod tests {
             let val = lp.get(ele);
             match val {
                 Value::Int(v) => {
-                    println!("Int Value     -> {}", v);
+                    println!("Int     -> {}", v);
                 }
                 Value::Str(_v, _len) => {
-                    println!("String Value  -> {}", val.as_str());
+                    println!("String  -> {}", val.as_str());
                 }
             }
         }
 
-        println!("Listpack Bytes:   {}", lp.size());
-        println!("Listpack Length:  {}", lp.len());
+        println!();
+        println!("Seeking to index 10...");
+        match lp.seek(10) {
+            Some(el) => {
+                println!("Found...");
+                let val = lp.get(el);
+                match val {
+                    Value::Int(v) => {
+                        println!("Int     -> {}", v);
+                    }
+                    Value::Str(_v, _len) => {
+                        println!("String  -> {}", val.as_str());
+                    }
+                }
+            }
+            None => {
+                println!("Not Found!");
+            }
+        }
+
+        println!();
+        println!("Seeking to index 100...");
+        match lp.seek(100) {
+            Some(el) => {
+                println!("Found...");
+                let val = lp.get(el);
+                match val {
+                    Value::Int(v) => {
+                        println!("Int     -> {}", v);
+                    }
+                    Value::Str(_v, _len) => {
+                        println!("String  -> {}", val.as_str());
+                    }
+                }
+            }
+            None => {
+                println!("Not Found!");
+            }
+        }
+
+        println!();
+        println!("Bytes:            {}", lp.size());
+        println!("Length:           {}", lp.len());
+        println!("Bytes / Element:  {}", (lp.size() - 6) as f32 / lp.len() as f32);
 //        assert_eq!(lp.len(), 3);
     }
 }
