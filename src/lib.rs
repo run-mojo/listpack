@@ -11,6 +11,8 @@ pub const BEFORE: libc::c_int = 0;
 pub const AFTER: libc::c_int = 1;
 pub const REPLACE: libc::c_int = 2;
 
+pub const EMPTY: &'static [u8] = &[];
+
 /// Return the existing Rax allocator.
 pub unsafe fn allocator() -> (
     extern "C" fn(size: libc::size_t) -> *mut u8,
@@ -43,7 +45,402 @@ pub enum Value {
     Str(*const u8, usize),
 }
 
+impl Into<Value> for u8 {
+    #[inline]
+    fn into(self) -> Value {
+        Value::Int(self as i64)
+    }
+}
+
+impl From<Value> for u8 {
+    fn from(v: Value) -> Self {
+        match &v {
+            &Value::Int(i) => i as Self,
+            &Value::Str(ptr, len) => unsafe {
+                if len == 0 || ptr.is_null() {
+                    u8::default()
+                } else {
+                    *ptr
+                }
+            }
+        }
+    }
+}
+
+impl Into<Value> for i8 {
+    #[inline]
+    fn into(self) -> Value {
+        Value::Int(self as i64)
+    }
+}
+
+impl From<Value> for i8 {
+    fn from(v: Value) -> Self {
+        match &v {
+            &Value::Int(i) => i as Self,
+            &Value::Str(ptr, len) => unsafe {
+                if len == 0 {
+                    i8::default()
+                } else {
+                    *ptr as Self
+                }
+            }
+        }
+    }
+}
+
+impl Into<Value> for u16 {
+    #[inline]
+    fn into(self) -> Value {
+        Value::Int(self as i64)
+    }
+}
+
+impl From<Value> for u16 {
+    fn from(v: Value) -> Self {
+        match &v {
+            &Value::Int(i) => i as Self,
+            &Value::Str(ptr, len) => unsafe {
+                if len != std::mem::size_of::<Self>() {
+                    Self::default()
+                } else {
+                    Self::from_le(*(ptr as *mut [u8; size_of::<Self>()] as *mut Self))
+                }
+            }
+        }
+    }
+}
+
+impl Into<Value> for i16 {
+    #[inline]
+    fn into(self) -> Value {
+        Value::Int(self as i64)
+    }
+}
+
+impl From<Value> for i16 {
+    fn from(v: Value) -> Self {
+        match &v {
+            &Value::Int(i) => i as Self,
+            &Value::Str(ptr, len) => unsafe {
+                if len != std::mem::size_of::<Self>() {
+                    Self::default()
+                } else {
+                    Self::from_le(*(ptr as *mut [u8; size_of::<Self>()] as *mut Self))
+                }
+            }
+        }
+    }
+}
+
+impl Into<Value> for u32 {
+    #[inline]
+    fn into(self) -> Value {
+        Value::Int(self as i64)
+    }
+}
+
+impl From<Value> for u32 {
+    fn from(v: Value) -> Self {
+        match &v {
+            &Value::Int(i) => i as Self,
+            &Value::Str(ptr, len) => unsafe {
+                if len != std::mem::size_of::<Self>() {
+                    Self::default()
+                } else {
+                    Self::from_le(*(ptr as *mut [u8; size_of::<Self>()] as *mut Self))
+                }
+            }
+        }
+    }
+}
+
+impl Into<Value> for i32 {
+    #[inline]
+    fn into(self) -> Value {
+        Value::Int(self as i64)
+    }
+}
+
+impl From<Value> for i32 {
+    fn from(v: Value) -> Self {
+        match &v {
+            &Value::Int(i) => i as Self,
+            &Value::Str(ptr, len) => unsafe {
+                if len != std::mem::size_of::<Self>() {
+                    Self::default()
+                } else {
+                    Self::from_le(*(ptr as *mut [u8; size_of::<Self>()] as *mut Self))
+                }
+            }
+        }
+    }
+}
+
+impl Into<Value> for u64 {
+    #[inline]
+    fn into(self) -> Value {
+        Value::Int(self as i64)
+    }
+}
+
+impl From<Value> for u64 {
+    fn from(v: Value) -> Self {
+        match &v {
+            &Value::Int(i) => i as Self,
+            &Value::Str(ptr, len) => unsafe {
+                if len != std::mem::size_of::<Self>() {
+                    Self::default()
+                } else {
+                    Self::from_le(*(ptr as *mut [u8; size_of::<Self>()] as *mut Self))
+                }
+            }
+        }
+    }
+}
+
+impl Into<Value> for i64 {
+    #[inline]
+    fn into(self) -> Value {
+        Value::Int(self as i64)
+    }
+}
+
+impl From<Value> for i64 {
+    fn from(v: Value) -> Self {
+        match &v {
+            &Value::Int(i) => i as Self,
+            &Value::Str(ptr, len) => unsafe {
+                if len != std::mem::size_of::<Self>() {
+                    Self::default()
+                } else {
+                    Self::from_le(*(ptr as *mut [u8; size_of::<Self>()] as *mut Self))
+                }
+            }
+        }
+    }
+}
+
+impl Into<Value> for isize {
+    #[inline]
+    fn into(self) -> Value {
+        Value::Int(self as i64)
+    }
+}
+
+impl From<Value> for isize {
+    fn from(v: Value) -> Self {
+        match &v {
+            &Value::Int(i) => i as Self,
+            &Value::Str(ptr, len) => unsafe {
+                if len != std::mem::size_of::<Self>() {
+                    Self::default()
+                } else {
+                    Self::from_le(*(ptr as *mut [u8; size_of::<Self>()] as *mut Self))
+                }
+            }
+        }
+    }
+}
+
+impl Into<Value> for usize {
+    #[inline]
+    fn into(self) -> Value {
+        Value::Int(self as i64)
+    }
+}
+
+impl From<Value> for usize {
+    fn from(v: Value) -> Self {
+        match &v {
+            &Value::Int(i) => i as Self,
+            &Value::Str(ptr, len) => unsafe {
+                if len != std::mem::size_of::<Self>() {
+                    Self::default()
+                } else {
+                    Self::from_le(*(ptr as *mut [u8; size_of::<Self>()] as *mut Self))
+                }
+            }
+        }
+    }
+}
+
+impl Into<Value> for f32 {
+    #[inline]
+    fn into(self) -> Value {
+        Value::Int(self.to_bits() as i64)
+    }
+}
+
+impl From<Value> for f32 {
+    fn from(v: Value) -> Self {
+        match &v {
+            &Value::Int(i) => Self::from_bits(i as u32),
+            &Value::Str(ptr, len) => unsafe {
+                if len != std::mem::size_of::<Self>() {
+                    Self::default()
+                } else {
+                    // We used a Little Endian to encode so let's reverse it
+                    f32::from_bits(
+                        u32::from_le(
+                            *(ptr as *mut [u8; std::mem::size_of::<Self>()] as *mut u32)
+                        )
+                    )
+                }
+            }
+        }
+    }
+}
+
+impl Into<Value> for f64 {
+    #[inline]
+    fn into(self) -> Value {
+        Value::Int(self.to_bits() as i64)
+    }
+}
+
+impl From<Value> for f64 {
+    fn from(v: Value) -> Self {
+        match &v {
+            &Value::Int(i) => Self::from_bits(i as u64),
+            &Value::Str(ptr, len) => unsafe {
+                if len != std::mem::size_of::<Self>() {
+                    // Maybe f32 was used?
+                    if len == std::mem::size_of::<f32>() {
+                        f32::from_bits(
+                            u32::from_le(
+                                *(ptr as *mut [u8; std::mem::size_of::<Self>()] as *mut u32)
+                            )
+                        ) as f64
+                    } else {
+                        Self::default()
+                    }
+                } else {
+                    // We used a Little Endian to encode so let's reverse it
+                    f64::from_bits(
+                        u64::from_le(
+                            *(ptr as *mut [u8; std::mem::size_of::<Self>()] as *mut u64)
+                        )
+                    )
+                }
+            }
+        }
+    }
+}
+
+impl Into<Value> for u128 {
+    #[inline]
+    fn into(self) -> Value {
+        Value::Str(&self as *const _ as *const u8,
+                   std::mem::size_of::<u128>())
+    }
+}
+
+impl From<Value> for u128 {
+    fn from(v: Value) -> Self {
+        match &v {
+            &Value::Int(i) => i as Self,
+            &Value::Str(ptr, len) => unsafe {
+                if len != std::mem::size_of::<Self>() {
+                    Self::default()
+                } else {
+                    Self::from_le(*(ptr as *mut [u8; size_of::<Self>()] as *mut Self))
+                }
+            }
+        }
+    }
+}
+
+impl Into<Value> for i128 {
+    #[inline]
+    fn into(self) -> Value {
+        Value::Str(&self as *const _ as *const u8,
+                   std::mem::size_of::<i128>())
+    }
+}
+
+impl From<Value> for i128 {
+    fn from(v: Value) -> Self {
+        match &v {
+            &Value::Int(i) => i as Self,
+            &Value::Str(ptr, len) => unsafe {
+                if len != std::mem::size_of::<Self>() {
+                    Self::default()
+                } else {
+                    Self::from_le(*(ptr as *mut [u8; size_of::<Self>()] as *mut Self))
+                }
+            }
+        }
+    }
+}
+
+impl<'a> Into<Value> for &'a str {
+    #[inline]
+    fn into(self) -> Value {
+        Value::Str(self.as_ptr(), self.len())
+    }
+}
+
+impl<'a> Into<Value> for &'a [u8] {
+    #[inline]
+    fn into(self) -> Value {
+        Value::Str(self.as_ptr(), self.len())
+    }
+}
+
+impl<'a> Into<Value> for &'a String {
+    #[inline]
+    fn into(self) -> Value {
+        Value::Str(self.as_ptr(), self.len())
+    }
+}
+
+impl Into<Value> for String {
+    #[inline]
+    fn into(self) -> Value {
+        Value::Str(self.as_ptr(), self.len())
+    }
+}
+
+impl<'a> Into<Value> for &'a Vec<u8> {
+    #[inline]
+    fn into(self) -> Value {
+        Value::Str(self.as_ptr(), self.len())
+    }
+}
+
+impl Into<Value> for Vec<u8> {
+    #[inline]
+    fn into(self) -> Value {
+        Value::Str(self.as_ptr(), self.len())
+    }
+}
+
 impl Value {
+    #[inline]
+    pub fn as_bytes<'a>(&self) -> &'a [u8] {
+        match *self {
+            Value::Int(v) => {
+                unsafe {
+                    std::slice::from_raw_parts(
+                        &v as *const _ as *const u8,
+                        std::mem::size_of::<i64>(),
+                    )
+                }
+            }
+            Value::Str(ptr, len) => {
+                if ptr.is_null() || len == 0 {
+                    EMPTY
+                } else {
+                    unsafe {
+                        std::slice::from_raw_parts(ptr, len as usize)
+                    }
+                }
+            }
+        }
+    }
+
+    #[inline]
     pub fn as_str<'a>(&self) -> &'a str {
         match *self {
             Value::Int(v) => {
@@ -59,11 +456,121 @@ impl Value {
             Value::Str(ptr, len) => {
                 unsafe {
                     std::str::from_utf8_unchecked(
-                        std::slice::from_raw_parts(ptr, len)
+                        std::slice::from_raw_parts(ptr, len as usize)
                     )
                 }
             }
         }
+    }
+}
+
+impl PartialEq for Value {
+    fn eq(&self, other: &Value) -> bool {
+        match self {
+            &Value::Int(v) => {
+                match other {
+                    &Value::Int(v2) => v == v2,
+                    &Value::Str(_, _) => false
+                }
+            }
+            &Value::Str(ptr, len) => {
+                match other {
+                    &Value::Int(_) => false,
+                    &Value::Str(ptr2, len2) => unsafe {
+                        if len != len2 {
+                            false
+                        } else if ptr == ptr2 {
+                            true
+                        } else if ptr.is_null() || ptr2.is_null() {
+                            false
+                        } else {
+                            libc::memcmp(
+                                ptr as *mut libc::c_void,
+                                ptr2 as *mut libc::c_void,
+                                len,
+                            ) == 0
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+impl PartialOrd for Value {
+    fn partial_cmp(&self, other: &Value) -> Option<std::cmp::Ordering> {
+        Some(match self {
+            &Value::Int(v) => {
+                match other {
+                    &Value::Int(v2) => {
+                        v.cmp(&v2)
+                    }
+                    &Value::Str(_, _) => std::cmp::Ordering::Less
+                }
+            }
+            &Value::Str(ptr, len) => {
+                match other {
+                    &Value::Int(_) => std::cmp::Ordering::Greater,
+                    &Value::Str(ptr2, len2) => unsafe {
+                        match len.cmp(&len2) {
+                            std::cmp::Ordering::Less => {
+                                if len == 0 {
+                                    std::cmp::Ordering::Less
+                                } else {
+                                    let r = libc::memcmp(
+                                        ptr as *mut libc::c_void,
+                                        ptr2 as *mut libc::c_void,
+                                        len,
+                                    );
+
+                                    if r <= 0 {
+                                        std::cmp::Ordering::Less
+                                    } else {
+                                        std::cmp::Ordering::Greater
+                                    }
+                                }
+                            }
+                            std::cmp::Ordering::Equal => {
+                                if len <= 0 {
+                                    std::cmp::Ordering::Equal
+                                } else {
+                                    let r = libc::memcmp(
+                                        ptr as *mut libc::c_void,
+                                        ptr2 as *mut libc::c_void,
+                                        len,
+                                    );
+
+                                    if r == 0 {
+                                        std::cmp::Ordering::Equal
+                                    } else if r < 0 {
+                                        std::cmp::Ordering::Less
+                                    } else {
+                                        std::cmp::Ordering::Greater
+                                    }
+                                }
+                            }
+                            std::cmp::Ordering::Greater => {
+                                if len2 == 0 {
+                                    std::cmp::Ordering::Greater
+                                } else {
+                                    let r = libc::memcmp(
+                                        ptr as *mut libc::c_void,
+                                        ptr2 as *mut libc::c_void,
+                                        len2,
+                                    );
+
+                                    if r >= 0 {
+                                        std::cmp::Ordering::Greater
+                                    } else {
+                                        std::cmp::Ordering::Less
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        })
     }
 }
 
@@ -170,7 +677,7 @@ impl Str for f32 {
 
     #[inline]
     fn encode(self) -> Self::Output {
-        // Encode as u32 Big Endian
+        // Encode as u32 Little Endian
         self.to_bits().to_le()
     }
 
@@ -186,7 +693,7 @@ impl Str for f32 {
             return Self::default();
         }
         unsafe {
-            // We used a BigEndian u32 to encode so let's reverse it
+            // We used a Little u32 to encode so let's reverse it
             f32::from_bits(
                 u32::from_le(
                     *(ptr as *mut [u8; std::mem::size_of::<Self::Output>()] as *mut u32)
@@ -201,7 +708,7 @@ impl Str for f64 {
 
     #[inline]
     fn encode(self) -> Self::Output {
-        // Encode as u64 Big Endian
+        // Encode as u64 Little Endian
         self.to_bits().to_le()
     }
 
@@ -217,7 +724,7 @@ impl Str for f64 {
             return Self::default();
         }
         unsafe {
-            // We used a BigEndian u64 to encode so let's reverse it
+            // We used a Little Endian u64 to encode so let's reverse it
             f64::from_bits(
                 u64::from_le(
                     *(ptr as *mut [u8; size_of::<Self::Output>()] as *mut u64)
@@ -557,7 +1064,41 @@ impl<'a> Str for &'a str {
 }
 
 
-///
+/// A listpack is encoded into a single linear chunk of memory. It has a fixed
+/// length header of six bytes (instead of ten bytes of ziplist, since we no
+/// longer need a pointer to the start of the last element). The header is
+/// followed by the listpack elements. In theory the data structure does not need
+/// any terminator, however for certain concerns, a special entry marking the
+/// end of the listpack is provided, in the form of a single byte with value
+/// FF (255). The main advantages of the terminator are the ability to scan the
+/// listpack without holding (and comparing at each iteration) the address of
+/// the end of the listpack, and to recognize easily if a listpack is well
+/// formed or truncated. These advantages are, in the idea of the writer, worth
+/// the additional byte needed in the representation.
+/// 
+///     <tot-bytes> <num-elements> <element-1> ... <element-N> <listpack-end-byte>
+/// 
+/// The six byte header, composed of the tot-bytes and num-elements fields is
+/// encoded in the following way:
+/// 
+/// * `tot-bytes`: 32 bit unsigned integer holding the total amount of bytes
+/// representing the listpack. Including the header itself and the terminator.
+/// This basically is the total size of the allocation needed to hold the listpack
+/// and allows to jump at the end in order to scan the listpack in reverse order,
+/// from the last to the first element, when needed.
+/// * `num-elements`:  16 bit unsigned integer holding the total number of elements
+/// the listpack holds. However if this field is set to 65535, which is the greatest
+/// unsigned integer representable in 16 bit, it means that the number of listpack
+/// elements is not known, so a LIST-LENGTH operation will require to fully scan
+/// the listpack. This happens when, at some point, the listpack has a number of
+/// elements equal or greater than 65535. The num-elements field will be set again
+/// to a lower number the first time a LIST-LENGTH operation detects the elements
+/// count returned in the representable range.
+/// 
+/// All integers in the listpack are stored in little endian format, if not
+/// otherwise specified (certain special encodings are in big endian because
+/// it is more natural to represent them in this way for the way the specification
+/// maps to C code).
 impl Listpack {
     pub fn new() -> Listpack {
         return Listpack { lp: unsafe { lpNew() } };
@@ -569,12 +1110,12 @@ impl Listpack {
     /// could be modified, because if the count is found to be already within
     /// the 'numele' header field range, the new value is set.
     pub fn len(&self) -> u32 {
-        unsafe { lpLength(self.lp) as u32 }
+        unsafe { u32::from_le(lpLength(self.lp) as u32) }
     }
 
     /// Return the total number of bytes the listpack is composed of.
     pub fn size(&self) -> u32 {
-        unsafe { lpBytes(self.lp) }
+        unsafe { u32::from_le(lpBytes(self.lp)) }
     }
 
     /// Decodes and returns the entry value of the element.
@@ -618,6 +1159,221 @@ impl Listpack {
         }
     }
 
+    #[inline]
+    pub fn get_i8(&self, ele: Element) -> i8 {
+        i8::from(self.get(ele))
+    }
+
+    #[inline]
+    pub fn append_i8(&mut self, v: i8) -> bool {
+        self.append_int(v as i64)
+    }
+
+    #[inline]
+    pub fn replace_i8(&mut self, ele: Element, v: i8) -> Option<Element> {
+        self.replace_int(ele, v as i64)
+    }
+
+    #[inline]
+    pub fn append_i8_fixed(&mut self, v: i8) -> bool {
+        self.append_str(v)
+    }
+
+    #[inline]
+    pub fn get_u8(&self, ele: Element) -> u8 {
+        u8::from(self.get(ele))
+    }
+
+    #[inline]
+    pub fn append_u8(&mut self, v: u8) -> bool {
+        self.append_int(v as i64)
+    }
+
+    #[inline]
+    pub fn append_u8_fixed(&mut self, v: u8) -> bool {
+        self.append_str(v)
+    }
+
+    #[inline]
+    pub fn get_i16(&self, ele: Element) -> i16 {
+        i16::from(self.get(ele))
+    }
+
+    #[inline]
+    pub fn append_i16(&mut self, v: i16) -> bool {
+        self.append_int(v as i64)
+    }
+
+    #[inline]
+    pub fn append_i16_fixed(&mut self, v: i16) -> bool {
+        self.append_str(v)
+    }
+
+    #[inline]
+    pub fn get_u16(&self, ele: Element) -> u16 {
+        u16::from(self.get(ele))
+    }
+
+    #[inline]
+    pub fn append_u16(&mut self, v: u16) -> bool {
+        self.append_int(v as i64)
+    }
+
+    #[inline]
+    pub fn append_u16_fixed(&mut self, v: u16) -> bool {
+        self.append_str(v)
+    }
+
+    #[inline]
+    pub fn get_i32(&self, ele: Element) -> i32 {
+        i32::from(self.get(ele))
+    }
+
+    #[inline]
+    pub fn append_i32(&mut self, v: i32) -> bool {
+        self.append_int(v as i64)
+    }
+
+    #[inline]
+    pub fn append_i32_fixed(&mut self, v: i32) -> bool {
+        self.append_str(v)
+    }
+
+    #[inline]
+    pub fn get_u32(&self, ele: Element) -> u32 {
+        u32::from(self.get(ele))
+    }
+
+    #[inline]
+    pub fn append_u32(&mut self, v: u32) -> bool {
+        self.append_int(v as i64)
+    }
+
+    #[inline]
+    pub fn append_u32_fixed(&mut self, v: u32) -> bool {
+        self.append_str(v)
+    }
+
+    #[inline]
+    pub fn get_i64(&self, ele: Element) -> i64 {
+        i64::from(self.get(ele))
+    }
+
+    #[inline]
+    pub fn append_i64(&mut self, v: i64) -> bool {
+        self.append_int(v)
+    }
+
+    #[inline]
+    pub fn append_i64_fixed(&mut self, v: i64) -> bool {
+        self.append_str(v)
+    }
+
+    #[inline]
+    pub fn get_u64(&self, ele: Element) -> u64 {
+        u64::from(self.get(ele))
+    }
+
+    #[inline]
+    pub fn append_u64(&mut self, v: u64) -> bool {
+        self.append_int(v as i64)
+    }
+
+    #[inline]
+    pub fn append_u64_fixed(&mut self, v: u64) -> bool {
+        self.append_str(v)
+    }
+
+    #[inline]
+    pub fn get_isize(&self, ele: Element) -> isize {
+        isize::from(self.get(ele))
+    }
+
+    #[inline]
+    pub fn append_isize(&mut self, v: isize) -> bool {
+        self.append_int(v as i64)
+    }
+
+    #[inline]
+    pub fn append_isize_fixed(&mut self, v: isize) -> bool {
+        self.append_str(v)
+    }
+
+    #[inline]
+    pub fn get_usize(&self, ele: Element) -> usize {
+        usize::from(self.get(ele))
+    }
+
+    #[inline]
+    pub fn append_usize(&mut self, v: usize) -> bool {
+        self.append_int(v as i64)
+    }
+
+    #[inline]
+    pub fn append_usize_fixed(&mut self, v: usize) -> bool {
+        self.append_str(v)
+    }
+
+    #[inline]
+    pub fn get_f32(&self, ele: Element) -> f32 {
+        f32::from(self.get(ele))
+    }
+
+    #[inline]
+    pub fn append_f32(&mut self, v: f32) -> bool {
+        self.append_int(v.to_bits() as i64)
+    }
+
+    #[inline]
+    pub fn append_f32_fixed(&mut self, v: f32) -> bool {
+        self.append_str(v)
+    }
+
+    #[inline]
+    pub fn get_f64(&self, ele: Element) -> f64 {
+        f64::from(self.get(ele))
+    }
+
+    #[inline]
+    pub fn append_f64(&mut self, v: f64) -> bool {
+        self.append_int(v.to_bits() as i64)
+    }
+
+    #[inline]
+    pub fn append_f64_fixed(&mut self, v: f64) -> bool {
+        self.append_str(v)
+    }
+
+    #[inline]
+    pub fn get_i128(&self, ele: Element) -> i128 {
+        i128::from(self.get(ele))
+    }
+
+//    #[inline]
+//    pub fn append_i128(&mut self, v: i128) {
+//        // Is it within 64bit boundaries?
+//        if v < i64::max_value() as i128 && v >= i64::min_value() as i128 {
+//            self.append_int(v as i64)
+//        } else {
+//            self.append(v.into())
+//        }
+//    }
+//
+//    #[inline]
+//    pub fn get_u128(&self, ele: Element) -> u128 {
+//        u128::from(self.get(ele))
+//    }
+//
+//    #[inline]
+//    pub fn append_u128(&mut self, v: u128) {
+//        // Is it within 64bit boundaries?
+//        if v < i64::max_value() as u128 {
+//            self.append_int(v as i64)
+//        } else {
+//            self.append(v.into())
+//        }
+//    }
+
     ///
     #[inline]
     pub fn get_str(&self, ele: Element) -> &str {
@@ -631,11 +1387,15 @@ impl Listpack {
             Value::Str(ptr, len) => {
                 unsafe {
                     std::str::from_utf8_unchecked(
-                        std::slice::from_raw_parts(ptr, len)
+                        std::slice::from_raw_parts(ptr, len as usize)
                     )
                 }
             }
-            _ => default
+            Value::Int(_) => {
+//                let s: &'a mut String = Box::leak(Box::new(format!("{}", v)));
+//                s.as_str()
+                default
+            }
         }
     }
 
@@ -673,7 +1433,7 @@ impl Listpack {
             Value::Int(v) => self.insert_int(v, p, action),
             Value::Str(ptr, len) => {
                 let newp: &mut *mut u8 = &mut std::ptr::null_mut();
-                let result = unsafe {
+                let new_lp = unsafe {
                     lpInsert(
                         self.lp,
                         ptr, len as u32,
@@ -683,14 +1443,15 @@ impl Listpack {
                     )
                 };
 
-                if !result.is_null() {
-                    self.lp = result;
-                }
-
-                if newp.is_null() {
-                    None
+                if !new_lp.is_null() {
+                    self.lp = new_lp;
+                    if (*newp).is_null() {
+                        None
+                    } else {
+                        Some(*newp)
+                    }
                 } else {
-                    Some(*newp as Element)
+                    None
                 }
             }
         }
@@ -699,31 +1460,34 @@ impl Listpack {
     /// Append the specified element 'ele' of length 'len' at the end of the
     /// listpack. It is implemented in terms of insert(), so the return value is
     /// the same as insert().
-    pub fn append(&mut self, value: Value) {
+    pub fn append(&mut self, value: Value) -> bool {
         match value {
             Value::Int(v) => self.append_int(v),
             Value::Str(ptr, len) => {
-                let result = unsafe {
+                let new_lp = unsafe {
                     lpAppend(
                         self.lp,
                         ptr, len as u32,
                     )
                 };
 
-                if !result.is_null() {
-                    self.lp = result;
+                if !new_lp.is_null() {
+                    self.lp = new_lp;
+                    true
+                } else {
+                    false
                 }
             }
         }
     }
 
     ///
-    pub fn replace(&mut self, value: Value, pos: Element) {
+    pub fn replace(&mut self, pos: Element, value: Value) -> Option<Element> {
         match value {
-            Value::Int(v) => self.replace_int(v, pos),
+            Value::Int(v) => self.replace_int(pos, v),
             Value::Str(ptr, len) => unsafe {
-                let newp: &mut *mut u8 = &mut std::ptr::null_mut();
-                let result = lpInsert(
+                let mut newp: &mut *mut u8 = &mut std::ptr::null_mut();
+                let new_lp = lpInsert(
                     self.lp,
                     ptr, len as u32,
                     pos,
@@ -731,8 +1495,15 @@ impl Listpack {
                     newp,
                 );
 
-                if !result.is_null() {
-                    self.lp = result;
+                if !new_lp.is_null() {
+                    self.lp = new_lp;
+                    if (*newp).is_null() {
+                        None
+                    } else {
+                        Some(*newp)
+                    }
+                } else {
+                    None
                 }
             }
         }
@@ -740,8 +1511,7 @@ impl Listpack {
 
     /// Insert, delete or replace the specified element 'ele' of length 'len' at
     /// the specified position 'p', with 'p' being a listpack element pointer
-    /// obtained with first(), last(), index(), next(), prev() or
-    /// seek().
+    /// obtained with first(), last(), index(), next(), prev() or seek().
     ///
     /// The element is inserted before, after, or replaces the element pointed
     /// by 'p' depending on the 'where' argument, that can be BEFORE, AFTER
@@ -758,10 +1528,6 @@ impl Listpack {
     /// If 'newp' is not NULL, at the end of a successful call '*newp' will be set
     /// to the address of the element just added, so that it will be possible to
     /// continue an iteration with next() and prev().
-    ///
-    /// For deletion operations ('ele' set to None) 'newp' is set to the next
-    /// element, on the right of the deleted one, or to NULL if the deleted element
-    /// was the last one.
     pub fn insert_int<V>(
         &mut self,
         value: V,
@@ -772,7 +1538,7 @@ impl Listpack {
         unsafe {
             let i = value.to_int64();
             let newp: &mut *mut u8 = &mut std::ptr::null_mut();
-            let result = lpInsertInt64(
+            let new_lp = lpInsertInt64(
                 self.lp,
                 i,
                 p,
@@ -780,14 +1546,15 @@ impl Listpack {
                 newp,
             );
 
-            if !result.is_null() {
-                self.lp = result;
-            }
-
-            if newp.is_null() {
-                None
+            if !new_lp.is_null() {
+                self.lp = new_lp;
+                if (*newp).is_null() {
+                    None
+                } else {
+                    Some(*newp)
+                }
             } else {
-                Some(*newp as Element)
+                None
             }
         }
     }
@@ -795,22 +1562,36 @@ impl Listpack {
     /// Append the specified element 'ele' of length 'len' at the end of the
     /// listpack. It is implemented in terms of insert(), so the return value is
     /// the same as insert().
-    pub fn append_int<V>(&mut self, value: V) where V: Int {
+    ///
+    /// Returns true if it succeeded or false when out-of-memory or when the
+    /// listpack total length would exceed the max allowed size of 2^32-1
+    pub fn append_int<V>(&mut self, value: V) -> bool where V: Int {
         unsafe {
             let i = value.to_int64();
             let result = lpAppendInt64(self.lp, i);
             if !result.is_null() {
                 self.lp = result;
+                true
+            } else {
+                false
             }
         }
     }
 
-    pub fn replace_int<V>(&mut self, value: V, pos: Element) where V: Int {
+    pub fn replace_int<V>(&mut self, mut pos: Element, value: V) -> Option<Element> where V: Int {
         unsafe {
             let i = value.to_int64();
-            let result = lpReplaceInt64(self.lp, pos as *mut *mut _ as *mut *mut u8, i);
-            if !result.is_null() {
-                self.lp = result;
+            let newp: &mut *mut u8 = &mut pos;
+            let new_lp = lpReplaceInt64(self.lp, newp, i);
+            if !new_lp.is_null() {
+                self.lp = new_lp;
+                if (*newp).is_null() {
+                    None
+                } else {
+                    Some(*newp)
+                }
+            } else {
+                None
             }
         }
     }
@@ -840,6 +1621,9 @@ impl Listpack {
     /// For deletion operations ('ele' set to None) 'newp' is set to the next
     /// element, on the right of the deleted one, or to NULL if the deleted element
     /// was the last one.
+    ///
+    /// If None is returned then it failed because of out-of-memory or invalid
+    /// element pointer.
     pub fn insert_str<V>(
         &mut self,
         value: V,
@@ -859,14 +1643,15 @@ impl Listpack {
                 newp,
             );
 
-            if !result.is_null() {
-                self.lp = result;
-            }
-
-            if newp.is_null() {
+            if result.is_null() {
                 None
             } else {
-                Some(*newp as Element)
+                self.lp = result;
+                if newp.is_null() {
+                    None
+                } else {
+                    Some(*newp as Element)
+                }
             }
         }
     }
@@ -874,13 +1659,16 @@ impl Listpack {
     /// Append the specified element 'ele' of length 'len' at the end of the
     /// listpack. It is implemented in terms of insert(), so the return value is
     /// the same as insert().
-    pub fn append_str<V>(&mut self, value: V) where V: Str {
+    pub fn append_str<V>(&mut self, value: V) -> bool where V: Str {
         unsafe {
             let v = value.encode();
             let (ele, size) = v.to_buf();
             let result = lpAppend(self.lp, ele, size as u32);
             if !result.is_null() {
                 self.lp = result;
+                true
+            } else {
+                false
             }
         }
     }
@@ -1029,8 +1817,10 @@ impl Drop for Listpack {
     }
 }
 
+/// Opaque C type from listpack.c
 #[allow(non_snake_case)]
 #[allow(non_camel_case_types)]
+#[repr(C)]
 pub struct listpack;
 
 #[allow(improper_ctypes)]
@@ -1061,7 +1851,7 @@ extern "C" {
         size: libc::uint32_t,
         p: *mut u8,
         wh: libc::c_int,
-        newp: *mut *mut u8,
+        newp: &mut *mut u8,
     ) -> *mut listpack;
 
     pub fn lpAppend(
@@ -1127,18 +1917,80 @@ extern "C" {
 
     pub fn lpReplaceInt64(
         lp: *mut listpack,
-        pos: *mut *mut u8,
+        pos: &mut *mut u8,
         value: libc::int64_t,
     ) -> *mut listpack;
 }
+
+/// A facade to represent a series of contiguous fields as a Record.
+pub trait Adapter {}
 
 
 #[cfg(test)]
 mod tests {
     use *;
 
+    fn print_cmp(lp: &mut Listpack, ele_1: Element, ele_2: Element) {
+        match ele_1.cmp(&ele_2) {
+            std::cmp::Ordering::Less => {
+                println!("{} < {}", lp.get_str(ele_1), lp.get_str(ele_2));
+                ;
+            }
+            std::cmp::Ordering::Equal => {
+                println!("{} == {}", lp.get_str(ele_1), lp.get_str(ele_2));
+            }
+            std::cmp::Ordering::Greater => {
+                println!("{} > {}", lp.get_str(ele_1), lp.get_str(ele_2));
+            }
+        }
+    }
+
     #[test]
-    fn it_works() {
+    fn test_cmp() {
+        let mut lp = Listpack::new();
+        lp.append_str("hello");
+        lp.append_str("bye");
+
+        let ele_1 = lp.first().unwrap();
+        let ele_2 = lp.seek(1).unwrap();
+
+        print_cmp(&mut lp, ele_1, ele_2);
+    }
+
+    #[test]
+    fn test_replace() {
+        let mut lp = Listpack::new();
+        println!("lp size before append_i32: {}", lp.size());
+        lp.append_i32(1);
+
+        println!("lp size before append_i32_fixed: {}", lp.size());
+        lp.append_i32_fixed(1);
+        println!("lp size after append_i32_fixed:  {}", lp.size());
+
+        let v1 = lp.get_i32(lp.first().unwrap());
+        let v2 = lp.get_i32(lp.next(lp.first().unwrap()).unwrap());
+
+        assert_eq!(v1, v2);
+    }
+
+    #[test]
+    fn test_append_helpers() {
+        let mut lp = Listpack::new();
+        println!("lp size before append_i32: {}", lp.size());
+        lp.append_i32(1);
+
+        println!("lp size before append_i32_fixed: {}", lp.size());
+        lp.append_i32_fixed(1);
+        println!("lp size after append_i32_fixed:  {}", lp.size());
+
+        let v1 = lp.get_i32(lp.first().unwrap());
+        let v2 = lp.get_i32(lp.next(lp.first().unwrap()).unwrap());
+
+        assert_eq!(v1, v2);
+    }
+
+    #[test]
+    fn test_multiple() {
         let mut lp = Listpack::new();
 
         for i in 0..24 {
@@ -1146,6 +1998,7 @@ mod tests {
         }
 
         lp.append(Value::Int(25));
+        lp.append("hi".into());
         lp.append_str("hello");
         lp.append_str("bye");
 

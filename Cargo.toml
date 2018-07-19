@@ -1,6 +1,6 @@
 [package]
 name = "listpack"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["Clay Molocznik <clay@mojo.run>"]
 license = "MIT"
 readme = "README.md"

@@ -1,6 +1,43 @@
 # listpack
 
-Very memory efficient packed list data structure. Originally created and used in Redis and is in production in Redis Streams. Specification and data format is explained below usage example. For another gem of Redis engineering look at the Radix Tree "Rax" wrapper project.
+A listpack is encoded into a single linear chunk of memory. It has a fixed
+length header of six bytes (instead of ten bytes of ziplist, since we no
+longer need a pointer to the start of the last element). The header is
+followed by the listpack elements. In theory the data structure does not need
+any terminator, however for certain concerns, a special entry marking the
+end of the listpack is provided, in the form of a single byte with value
+FF (255). The main advantages of the terminator are the ability to scan the
+listpack without holding (and comparing at each iteration) the address of
+the end of the listpack, and to recognize easily if a listpack is well
+formed or truncated. These advantages are, in the idea of the writer, worth
+the additional byte needed in the representation.
+
+    <tot-bytes> <num-elements> <element-1> ... <element-N> <listpack-end-byte>
+
+The six byte header, composed of the tot-bytes and num-elements fields is
+encoded in the following way:
+
+* `tot-bytes`: 32 bit unsigned integer holding the total amount of bytes
+representing the listpack. Including the header itself and the terminator.
+This basically is the total size of the allocation needed to hold the listpack
+and allows to jump at the end in order to scan the listpack in reverse order,
+from the last to the first element, when needed.
+* `num-elements`:  16 bit unsigned integer holding the total number of elements
+the listpack holds. However if this field is set to 65535, which is the greatest
+unsigned integer representable in 16 bit, it means that the number of listpack
+elements is not known, so a LIST-LENGTH operation will require to fully scan
+the listpack. This happens when, at some point, the listpack has a number of
+elements equal or greater than 65535. The num-elements field will be set again
+to a lower number the first time a LIST-LENGTH operation detects the elements
+count returned in the representable range.
+
+All integers in the listpack are stored in little endian format, if not
+otherwise specified (certain special encodings are in big endian because
+it is more natural to represent them in this way for the way the specification
+maps to C code).
+
+For another data structure gem from Redis check out the Radix Tree "Rax" to
+be used in place of BTrees and HashMaps.
 
 [Radix Tree "Rax" used in Redis brought to Rust](https://github.com/run-mojo/rax)
 
@@ -15,33 +52,59 @@ use listpack;
 use listpack::{Listpack, Value};
 
 fn main() {
-    // Optional use different memory allocator
+    // Optionally use different memory allocator
     // Internally defaults to malloc in libc.
     patch_allocator();
     
     let mut lp = Listpack::new();
-    // Append any number type
-    lp.append_int(100);
-    // Append strings or byte slices
-    lp.append_str("hello");
     
-    // Append the special Value type which supports either...
-    lp.append(Value::Int(1)); // Int
-    // lp.append(Value::Str(ptr, len)); // Str - Raw Pointer
+    {
+        // Internally it's either Int or Str.
+
+        lp.append_int(100);         // Compressed Int
+        lp.append_str("hello");     // Str
+        lp.append_str(100);         // Binary integer representation
+        
+        // Use the Raw Value type
+        lp.append(Value::Int(1)); // Int
+        let my_str = "hello";
+        lp.append(Value::Str(my_str.as_ptr(), mystr.len())); // Str - Raw Pointer
+        
+        // Work with the primitive helpers.
+        // get_xx ->            i8, u8, i16, u16, i32, u32, i64, u64, i128, u128, f32, f64, isize, usize
+        // append_xx ->         i8, u8, i16, u16, i32, u32, i64, u64, i128, u128, f32, f64, isize, usize
+        // append_xx_fixed ->   i8, u8, i16, u16, i32, u32, i64, u64, i128, u128, f32, f64, isize, usize
+        
+        // Example with u64...
+        lp.append_u64(10);          // Represented as compressed Int type
+                                    // This will only be 2 bytes total in the listpack
+        lp.append_u64_fixed(10);    // Represented as 8byte binary type
+        
+        // Automatically converts regardless whether it was
+        // encoded in compressed format or in it's full
+        // binary representation.
+        let my_u64 = lp.get_u64(element);
+    }
     
     {
         // Seek element by index.
         let index = 1;
         let element = lp.seek(index);
+        
+        // Get the value
         let value = lp.get(element);
         let value_int = lp.get_int(element);
         let value_str = lp.get_str(element);
+        let value_int_u64 = lp.get_u64(element);
+        // get_xx -> i8, u8, i16, u16, i32, u32, i64, u64, i128, u128, f32, f64, isize, usize
         
         // Replace values
         lp.replace(element, Value::Int(2));
         // Delete element
         lp.delete(element);
-    }    
+    }
+    
+    
 
     println!("Iterate forward...");
     let mut ele = lp.start();
@@ -50,10 +113,10 @@ fn main() {
         let val = lp.get(ele);
         match val {
             Value::Int(v) => {
-                println!("Int Value     -> {}", v);
+                println!("Int     -> {}", v);
             }
             Value::Str(_v, _len) => {
-                println!("String Value  -> {}", val.as_str());
+                println!("String  -> {}", val.as_str());
             }
         }
     }
@@ -66,13 +129,18 @@ fn main() {
         let val = lp.get(ele);
         match val {
             Value::Int(v) => {
-                println!("Int Value     -> {}", v);
+                println!("Int     -> {}", v);
             }
             Value::Str(_v, _len) => {
-                println!("String Value  -> {}", val.as_str());
+                println!("String  -> {}", val.as_str());
             }
         }
     }
+    
+    println!();
+    println!("Bytes:            {}", lp.size());
+    println!("Length:           {}", lp.len());
+    println!("Bytes / Element:  {}", (lp.size() - 6) as f32 / lp.len() as f32); // 6byte listpack header
 }
 
 fn patch_allocator() {
