@@ -37,6 +37,10 @@
 
 #include <stdint.h>
 
+extern void* (*lp_malloc)(size_t);
+extern void* (*lp_realloc)(void*,size_t);
+extern void (*lp_free)(void*);
+
 #define LP_INTBUF_SIZE 21 /* 20 digits of -2^63 + 1 null term = 21. */
 
 /* lpInsert() where argument possible values: */

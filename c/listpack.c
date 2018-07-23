@@ -568,6 +568,10 @@ unsigned char *lpGet(unsigned char *p, int64_t *count, unsigned char *intbuf) {
     }
 }
 
+//unsigned char *lpInsert(unsigned char *lp, unsigned char *ele, uint32_t size, unsigned char *p, int where, unsigned char **newp) {
+//
+//}
+
 /* Insert, delete or replace the specified element 'ele' of length 'len' at
  * the specified position 'p', with 'p' being a listpack element pointer
  * obtained with lpFirst(), lpLast(), lpIndex(), lpNext(), lpPrev() or
@@ -781,3 +785,147 @@ unsigned char *lpSeek(unsigned char *lp, long index) {
     }
 }
 
+
+
+
+
+/* Insert, delete or replace the specified element 'ele' of length 'len' at
+ * the specified position 'p', with 'p' being a listpack element pointer
+ * obtained with lpFirst(), lpLast(), lpIndex(), lpNext(), lpPrev() or
+ * lpSeek().
+ *
+ * The element is inserted before, after, or replaces the element pointed
+ * by 'p' depending on the 'where' argument, that can be LP_BEFORE, LP_AFTER
+ * or LP_REPLACE.
+ *
+ * If 'ele' is set to NULL, the function removes the element pointed by 'p'
+ * instead of inserting one.
+ *
+ * Returns NULL on out of memory or when the listpack total length would exceed
+ * the max allowed size of 2^32-1, otherwise the new pointer to the listpack
+ * holding the new element is returned (and the old pointer passed is no longer
+ * considered valid)
+ *
+ * If 'newp' is not NULL, at the end of a successful call '*newp' will be set
+ * to the address of the element just added, so that it will be possible to
+ * continue an iteration with lpNext() and lpPrev().
+ *
+ * For deletion operations ('ele' set to NULL) 'newp' is set to the next
+ * element, on the right of the deleted one, or to NULL if the deleted element
+ * was the last one. */
+//unsigned char *lpfAppend(
+//        unsigned char *lp,
+////        unsigned long long offset,
+//        uint64_t lp_length,
+//        unsigned char *ele,
+//        uint32_t size,
+//        unsigned char **newp,
+//        void*(*realloc_func)(void*,size_t)) {
+//
+//    unsigned char intenc[LP_MAX_INT_ENCODING_LEN];
+//    unsigned char backlen[LP_MAX_BACKLEN_SIZE];
+//
+//    uint64_t enclen; /* The length of the encoded element. */
+//
+//    /* An element pointer set to NULL means deletion, which is conceptually
+//     * replacing the element with a zero-length element. So whatever we
+//     * get passed as 'where', set it to LP_REPLACE. */
+////    if (ele == NULL) where = LP_REPLACE;
+//
+//    /* If we need to insert after the current element, we just jump to the
+//     * next element (that could be the EOF one) and handle the case of
+//     * inserting before. So the function will actually deal with just two
+//     * cases: LP_BEFORE and LP_REPLACE. */
+////    if (where == LP_AFTER) {
+////        p = lpSkip(p);
+////        where = LP_BEFORE;
+////    }
+//
+//    /* Store the offset of the element 'p', so that we can obtain its
+//     * address again after a reallocation. */
+//    unsigned long poff = p-lp;
+//
+//    /* Calling lpEncodeGetType() results into the encoded version of the
+//     * element to be stored into 'intenc' in case it is representable as
+//     * an integer: in that case, the function returns LP_ENCODING_INT.
+//     * Otherwise if LP_ENCODING_STR is returned, we'll have to call
+//     * lpEncodeString() to actually write the encoded string on place later.
+//     *
+//     * Whatever the returned encoding is, 'enclen' is populated with the
+//     * length of the encoded element. */
+//    int enctype;
+//    if (ele) {
+//        enctype = lpEncodeGetType(ele,size,intenc,&enclen);
+//    } else {
+//        enctype = -1;
+//        enclen = 0;
+//    }
+//
+//    /* We need to also encode the backward-parsable length of the element
+//     * and append it to the end: this allows to traverse the listpack from
+//     * the end to the start. */
+//    unsigned long backlen_size = ele ? lpEncodeBacklen(backlen,enclen) : 0;
+//    uint64_t old_listpack_bytes = lpGetTotalBytes(lp);
+//
+//    uint64_t new_listpack_bytes = old_listpack_bytes + enclen + backlen_size;
+//    if (new_listpack_bytes > UINT32_MAX) return NULL;
+//
+//    /* We now need to reallocate in order to make space or shrink the
+//     * allocation (in case 'when' value is LP_REPLACE and the new element is
+//     * smaller). However we do that before memmoving the memory to
+//     * make room for the new element if the final allocation will get
+//     * larger, or we do it after if the final allocation will get smaller. */
+//
+//    unsigned char *dst = lp + poff; /* May be updated after reallocation. */
+//
+//    /* Realloc before: we need more room. */
+//    if (new_listpack_bytes > old_listpack_bytes) {
+//        if ((lp = realloc_func(lp,new_listpack_bytes)) == NULL) return NULL;
+//        dst = lp + poff;
+//    }
+//
+//    /* Setup the listpack relocating the elements to make the exact room
+//     * we need to store the new one. */
+////    if (where == LP_BEFORE) {
+////        memmove(dst+enclen+backlen_size,dst,old_listpack_bytes-poff);
+////    } else { /* LP_REPLACE. */
+////        long lendiff = (enclen+backlen_size)-replaced_len;
+////        memmove(dst+replaced_len+lendiff,
+////                dst+replaced_len,
+////                old_listpack_bytes-poff-replaced_len);
+////    }
+//
+//    /* Realloc after: we need to free space. */
+//    if (new_listpack_bytes < old_listpack_bytes) {
+//        if ((lp = lp_realloc(lp,new_listpack_bytes)) == NULL) return NULL;
+//        dst = lp + poff;
+//    }
+//
+//    /* Store the entry. */
+//    if (newp) {
+//        *newp = dst;
+//        /* In case of deletion, set 'newp' to NULL if the next element is
+//         * the EOF element. */
+//        if (!ele && dst[0] == LP_EOF) *newp = NULL;
+//    }
+//    if (ele) {
+//        if (enctype == LP_ENCODING_INT) {
+//            memcpy(dst,intenc,enclen);
+//        } else {
+//            lpEncodeString(dst,ele,size);
+//        }
+//        dst += enclen;
+//        memcpy(dst,backlen,backlen_size);
+//        dst += backlen_size;
+//    }
+//    return lp;
+//}
+
+/* Append the specified element 'ele' of length 'len' at the end of the
+ * listpack. It is implemented in terms of lpInsert(), so the return value is
+ * the same as lpInsert(). */
+unsigned char *lpfAppend2(unsigned char *lp, unsigned char *ele, uint32_t size) {
+    uint64_t listpack_bytes = lpGetTotalBytes(lp);
+    unsigned char *eofptr = lp + listpack_bytes - 1;
+    return lpInsert(lp,ele,size,eofptr,LP_BEFORE,NULL);
+}

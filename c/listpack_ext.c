@@ -14,7 +14,6 @@
 #include <stdint.h>
 #include <errno.h>
 #include "listpack.h"
-#include "listpack_malloc.h"
 
 #define LONG_STR_SIZE      21          /* Bytes needed for long -> str + '\0' */
 
@@ -165,3 +164,4 @@ unsigned char *lpReplaceInt64(unsigned char *lp, unsigned char **pos, int64_t va
 //    v = ll;
 //    return v;
 //}
+

@@ -1,6 +1,6 @@
 [package]
 name = "listpack"
-version = "0.1.6"
+version = "0.1.7"
 authors = ["Clay Molocznik <clay@mojo.run>"]
 license = "MIT"
 readme = "README.md"
@@ -22,6 +22,7 @@ path = "benches/bench.rs"
 
 [dependencies]
 libc = "0.2"
+#jemallocator = "0.1.8"
 
 [dev-dependencies]
 bencher = "0.1.5"
